@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const JWT = process.env.JWT || 'shhh';
 
-const createTables = async () => {
+const createTables = async() => {
   const SQL = `
       DROP TABLE IF EXISTS cart_products;
       DROP TABLE IF EXISTS carts;
@@ -14,16 +14,16 @@ const createTables = async () => {
       CREATE TABLE products(
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name VARCHAR(50),
-        available BOOLEAM DEFAULT FALSE,
+        is_available BOOLEAM DEFAULT FALSE,
+        price INTEGER DEFAULT 0,
+        description VARCHAR(255),
         qty INTEGER DEFAULT 0
-        //able to use imgs?
       );
       CREATE TABLE users(
-        id SERIAL PRIMARY KEY
-        name VARCHAR(255),
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         email VARCHAR(50),
         password VARCHAR(50),
-        admin BOOLEAN DEFAULT FALSE,
+        is_admin BOOLEAN DEFAULT FALSE,
         UNIQUE (email)
       );
       CREATE TABLE carts(
@@ -34,27 +34,51 @@ const createTables = async () => {
         cart_id UUID REFERENCES carts(id) NOT NULL,
         product_id UUID REFERENCES products(id) NOT NULL,
         qty INTEGER REFERENCES products(qty) NOT NULL
-      )
+      );
     `;
   await client.query(SQL);
 };
 
-const createUser = async ({ name, email, password, admin }) => {
+const createUser = async ({ email, password, is_admin }) => {
   const SQL = `
-      INSERT INTO users(id,name,email,password,admin) VALUES($1, $2, $3, $4, $5) RETURNING *
+      INSERT INTO users(id, email, password, is_admin) VALUES($1, $2, $3, $4) RETURNING *
     `;
-  const response = await client.query(SQL, [uuid.v4(), name, email, await bcrypt.hash(password, 5)]);
+  const response = await client.query(SQL, [uuid.v4(), email, await bcrypt.hash(password, 5),is_admin]);
+  return response.rows[0];
+};
+
+const createProduct = async ({ name, is_available, price, description, qty }) => {
+  const SQL = `
+    INSERT INTO products(id, name, is_available, price, description, qty) VALUES($1, $2, $3, $4, $5, $6) RETURNING *
+  `;
+  const response = await client.query(SQL, [uuid.v4(), name, is_available, price, description, qty]);
+  return response.rows[0];
+};
+
+const createCarts = async({ user_id })=> {
+  const SQL = `
+    INSERT INTO carts(id, user_id) VALUES($1, $2) RETURNING *
+  `;
+  const response = await client.query(SQL, [uuid.v4(), user_id]);
+  return response.rows[0];
+};
+
+const createCartProducts = async({ cart_id, user_id, qty })=> {
+  const SQL = `
+    INSERT INTO cart_products(cart_id, product_id, qty) VALUES($1, $2, $3) RETURNING *
+  `;
+  const response = await client.query(SQL, cart_id, user_id, qty);
   return response.rows[0];
 };
 
 //creating jwt tokens
-const authenticate = async ({ username, password }) => {
+const authenticate = async ({ email, password }) => {
   const SQL = `
-      SELECT id, password, username
+      SELECT id, password, email
       FROM users
-      WHERE username = $1
+      WHERE email = $1
     `;
-  const response = await client.query(SQL, [username]);
+  const response = await client.query(SQL, [email]);
   if (!response.rows.length || (await bcrypt.compare(password, response.rows[0].password)) === false) {
     const error = Error('not authorized');
     error.status = 401;
@@ -90,8 +114,50 @@ const findUserWithToken = async (token) => {
   return response.rows[0];
 };
 
+const fetchUsers = async()=> {
+  const SQL = `
+    SELECT id, email, is_admin FROM users;
+  `;
+  const response = await client.query(SQL);
+  return response.rows;
+};
+
+const fetchProducts = async()=> {
+  const SQL = `
+    SELECT * FROM products;
+  `;
+  const response = await client.query(SQL);
+  return response.rows;
+};
+
+const fetchCarts = async(user_id)=> {
+  const SQL = `
+    SELECT * FROM carts where user_id = $1
+  `;
+  const response = await client.query(SQL, [user_id]);
+  return response.rows;
+};
+
+const fetchCartProducts = async(user_id)=> {
+  const SQL = `
+    SELECT * FROM cart_products
+  `;
+  const response = await client.query(SQL, [user_id]);
+  return response.rows;
+};
+
 module.exports = {
   client,
   createTables,
-  createUser
+  createUser,
+  createProduct,
+  createCarts,
+  createCartProducts,
+  authenticate,
+  findUserWithToken,
+  fetchProducts,
+  fetchUsers,
+  fetchCarts,
+  fetchCartProducts
+
 };
