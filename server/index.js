@@ -26,7 +26,10 @@ const isLoggedIn = async (req, res, next) => {
   }
 };
 
+//const isAdmin
+
 //secure routes which need to verify the logged in user (adding isLoggedIn)
+//auth
 app.post('/api/auth/login', async (req, res, next) => {
   try {
     res.send(await authenticate(req.body));
@@ -91,6 +94,12 @@ app.get('/api/products', async (req, res, next) => {
 });
 
 app.delete('/api/users/:user_id/cart_products')
+
+//app.delete(products)
+//functionality i need for site
+//admin get all users, products, carts 
+//admin delete all users, products
+//admin change products
 
 app.use((err, req, res, next) => {
   console.log(err);

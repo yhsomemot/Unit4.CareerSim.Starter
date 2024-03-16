@@ -11,29 +11,32 @@ const createTables = async() => {
       DROP TABLE IF EXISTS carts;
       DROP TABLE IF EXISTS users;
       DROP TABLE IF EXISTS products;
+      DROP TYPE IF EXISTS status;
       CREATE TABLE products(
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name VARCHAR(50),
-        is_available BOOLEAM DEFAULT FALSE,
+        name VARCHAR(100),
+        is_available BOOLEAN DEFAULT FALSE,
         price INTEGER DEFAULT 0,
         description VARCHAR(255),
         qty INTEGER DEFAULT 0
       );
       CREATE TABLE users(
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        email VARCHAR(50),
-        password VARCHAR(50),
+        email VARCHAR(100),
+        password VARCHAR(100),
         is_admin BOOLEAN DEFAULT FALSE,
         UNIQUE (email)
       );
+      CREATE TYPE status AS ENUM ('pending', 'complete');
       CREATE TABLE carts(
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id SERIAL REFERENCES user(id) NOT NULL 
+        user_id UUID REFERENCES users(id) NOT NULL,
+        current_status status
       );
       CREATE TABLE cart_products(
         cart_id UUID REFERENCES carts(id) NOT NULL,
         product_id UUID REFERENCES products(id) NOT NULL,
-        qty INTEGER REFERENCES products(qty) NOT NULL
+        qty INTEGER DEFAULT 0
       );
     `;
   await client.query(SQL);
@@ -92,7 +95,6 @@ const authenticate = async ({ email, password }) => {
 const findUserWithToken = async (token) => {
   let id;
   console.log("insidefinduserwithtoken")
-  console.log("passed token " + token)
   try {
     const payload = await jwt.verify(token, JWT);
     id = payload.id;
