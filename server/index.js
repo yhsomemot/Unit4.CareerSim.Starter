@@ -4,11 +4,13 @@ const {
   createUser,
   createProduct,
   createCarts,
+  createCartedProducts,
   fetchUsers,
   fetchCarts,
   fetchProducts,
   authenticate,
-  findUserWithToken
+  findUserWithToken,
+  fetchCartedProducts
 } = require('./db');
 const express = require('express');
 const app = express();
@@ -25,11 +27,11 @@ const isLoggedIn = async (req, res, next) => {
     next(ex);
   }
 };
-
 //const isAdmin
 
-//secure routes which need to verify the logged in user (adding isLoggedIn)
-//auth
+//secure routes which need to verify the logged in user (adding isLoggedIn) secure admin with isAdmin
+
+//auth: ensure that there is a valid token (use the middleware in the /api/auth/me route)
 app.post('/api/auth/login', async (req, res, next) => {
   try {
     res.send(await authenticate(req.body));
@@ -57,6 +59,10 @@ app.get('/api/auth/me', isLoggedIn, async (req, res, next) => {
   }
 });
 
+
+//USERS
+//will need to add is admin middleware
+//returns array of users
 app.get('/api/users', async (req, res, next) => {
   try {
     res.send(await fetchUsers());
@@ -66,6 +72,7 @@ app.get('/api/users', async (req, res, next) => {
   }
 });
 
+//returns an array of carts for a user (can anyone see? admin only?)
 app.get('/api/users/:id/carts', async (req, res, next) => {
   try {
     res.send(await fetchCarts(req.params.id));
@@ -75,15 +82,18 @@ app.get('/api/users/:id/carts', async (req, res, next) => {
   }
 });
 
-// app.post('/api/users/:id/favorites', isLoggedIn, async(req, res, next)=> {
-//   try {
-//     res.status(201).send(await createFavorite({ user_id: req.params.id, product_id: req.body.product_id}));
-//   }
-//   catch(ex){
-//     next(ex);
-//   }
-// });
+//returns an array of cartedProducts for a user
+app.get('/api/users/:id/cartedProducts', async (req, res, next) => {
+  try {
+    res.send(await fetchCartedProducts(req.params.id));
+  }
+  catch (ex) {
+    next(ex);
+  }
+});
 
+//need to add admin middleware
+//returns an an array of products
 app.get('/api/products', async (req, res, next) => {
   try {
     res.send(await fetchProducts());
@@ -93,7 +103,31 @@ app.get('/api/products', async (req, res, next) => {
   }
 });
 
-app.delete('/api/users/:user_id/cart_products')
+//admin only. create new products
+app.post('/api/products', async (req, res, next) => {
+  try {
+    res.status(201).send(await createProduct(req.body));
+  } catch(ex) {
+    next(ex);
+  }
+});
+
+//create a 
+app.post('api/products/')
+
+//post carts "favorite?"
+//post cartedproducts?
+//a product_id returns the created favorite with a status code of 201
+// app.post('/api/users/:id/favorites', isLoggedIn, async(req, res, next)=> {
+//   try {
+//     res.status(201).send(await createFavorite({ user_id: req.params.id, product_id: req.body.product_id}));
+//   }
+//   catch(ex){
+//     next(ex);
+//   }
+// });
+
+app.delete('/api/users/:user_id/cart_products/:id')
 
 //app.delete(products)
 //functionality i need for site
