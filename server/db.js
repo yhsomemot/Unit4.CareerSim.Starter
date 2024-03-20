@@ -4,6 +4,7 @@ const client = new pg.Client(process.env.DATABASE_URL || 'postgres://localhost/u
 const uuid = require('uuid'); //generate unique code
 const bcrypt = require('bcrypt'); //password encryption
 const jwt = require('jsonwebtoken'); //my drive
+const { response } = require('express');
 const JWT = process.env.JWT || 'shhh';
 
 //create tables
@@ -27,7 +28,6 @@ const createTables = async () => {
         price INTEGER DEFAULT 0,
         description VARCHAR(255),
         inventory INTEGER DEFAULT 0,
-        is_available BOOLEAN DEFAULT FALSE,
         PRIMARY KEY (id)
       );
       CREATE TABLE carted_products(
@@ -43,11 +43,11 @@ const createTables = async () => {
 };
 
 //create user
-const createUser = async ({ email, password, is_admin }) => {
+const createUser = async ({ email, password, address, payment_info, is_admin }) => {
   const SQL = `
       INSERT INTO users(id, email, password, address, payment_info, is_admin) VALUES($1, $2, $3, $4, $5, $6) RETURNING *
     `;
-  const response = await client.query(SQL, [uuid.v4(), email, await bcrypt.hash(password, 5), is_admin]);
+  const response = await client.query(SQL, [uuid.v4(), email, await bcrypt.hash(password, 5), address, payment_info, is_admin]);
   return response.rows[0];
 };
 //createCartedProduct
@@ -59,14 +59,13 @@ const createCartedProducts = async ({ cart_id, user_id, qty }) => {
   return response.rows[0];
 };
 //create product
-const createProduct = async ({ name, is_available, price, description, qty }) => {
+const createProduct = async ({ name, is_available, price, description, inventory }) => {
   const SQL = `
     INSERT INTO products(id, name, is_available, price, description, qty) VALUES($1, $2, $3, $4, $5, $6) RETURNING *
   `;
-  const response = await client.query(SQL, [uuid.v4(), name, is_available, price, description, qty]);
+  const response = await client.query(SQL, [uuid.v4(), name, is_available, price, description, inventory]);
   return response.rows[0];
 };
-//create order (optional. for capstone but not now.)
 
 //readUser
 const fetchUsers = async () => {
@@ -74,7 +73,7 @@ const fetchUsers = async () => {
     SELECT id, email, address, is_admin FROM users;
   `;
   const response = await client.query(SQL);
-  return response.rows;
+  return response.rows[0];
 };
 //raed Product --return all products
 const fetchProducts = async () => {
@@ -82,7 +81,7 @@ const fetchProducts = async () => {
     SELECT * FROM products;
   `;
   const response = await client.query(SQL);
-  return response.rows;
+  return response.rows[0];
 };
 //read CartedProduct
 const fetchCartedProducts = async ({ user_id }) => {
@@ -90,19 +89,40 @@ const fetchCartedProducts = async ({ user_id }) => {
     SELECT * FROM carted_products WHERE user_id = $1
   `;
   const response = await client.query(SQL, [user_id]);
-  return response.rows;
+  return response.rows[0];
 };
 //update user
-const updateUser = async () => {
-
-}
+const updateUser = async ({ email, password, address, payment_info, is_admin }) => {
+  const SQL = `
+    UPDATE users
+    SET email=$1, password=$2, address=$3, payment_info=$4, is_admin=$5
+    WHERE id=$6
+    RETIRNING *
+  `;
+  const result = await client.query(SQL,[email, password, address, payment_info, is_admin ]);
+  return response.rows[0];
+};
 //UpdateProduct
-const updateProduct = async () => {
-
-}
+const updateProduct = async ({ name, price, description, inventory }) => {
+  const SQL = `
+    UPDATE products
+    SET name=$1, price=$2, description=$3, inventory=$4
+    WHERE id=$5
+    RETIRNING *
+  `;
+  const result = await client.query(SQL,[name, price, description, inventory]);
+  return response.rows[0];
+};
 //update carted product
-const updateCartedProducts = async () => {
-
+const updateCartedProducts = async ({ user_id, product_id, qty }) => {
+  const SQL = `
+    UPDATE carted_products
+    SET user_id=$1, product_id=$2, qty=$3
+    WHERE id=$4
+    RETIRNING *
+`;
+const result = await client.query(SQL,[user_id, product_id, qty]);
+return response.rows[0];
 }
 //deleteUser
 const deleteUser = async () => {
