@@ -59,21 +59,21 @@ const createCartedProducts = async ({ cart_id, user_id, qty }) => {
   return response.rows[0];
 };
 //create product
-const createProduct = async ({ name, is_available, price, description, inventory }) => {
+const createProduct = async ({ name, price, description, inventory }) => {
   const SQL = `
-    INSERT INTO products(id, name, is_available, price, description, qty) VALUES($1, $2, $3, $4, $5, $6) RETURNING *
+    INSERT INTO products(id, name, price, description, inventory) VALUES($1, $2, $3, $4, $5) RETURNING *
   `;
-  const response = await client.query(SQL, [uuid.v4(), name, is_available, price, description, inventory]);
+  const response = await client.query(SQL, [uuid.v4(), name, price, description, inventory]);
   return response.rows[0];
 };
 
 //readUser
 const fetchUsers = async () => {
   const SQL = `
-    SELECT id, email, address, is_admin FROM users;
+    SELECT * FROM users;
   `;
   const response = await client.query(SQL);
-  return response.rows[0];
+  return response.rows;
 };
 //raed Product --return all products
 const fetchProducts = async () => {
@@ -81,7 +81,7 @@ const fetchProducts = async () => {
     SELECT * FROM products;
   `;
   const response = await client.query(SQL);
-  return response.rows[0];
+  return response.rows;
 };
 //read CartedProduct
 const fetchCartedProducts = async ({ user_id }) => {
@@ -89,7 +89,7 @@ const fetchCartedProducts = async ({ user_id }) => {
     SELECT * FROM carted_products WHERE user_id = $1
   `;
   const response = await client.query(SQL, [user_id]);
-  return response.rows[0];
+  return response.rows;
 };
 //update user
 const updateUser = async ({ email, password, address, payment_info, is_admin }) => {
