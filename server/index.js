@@ -3,19 +3,22 @@ const {
   createTables,
   createUser,
   createProduct,
-  createCarts,
   createCartedProducts,
-  fetchUsers,
-  fetchCarts,
-  fetchProducts,
+  updateUser,
+  updateProduct,
+  updateCartedProducts,
+  deleteUser,
+  deleteProduct,
+  deleteCartedProduct,
   authenticate,
   findUserWithToken,
+  fetchProducts,
+  fetchUsers,
   fetchCartedProducts
 } = require('./db');
 const express = require('express');
 const app = express();
 app.use(express.json());
-
 
 //compose middleware to ensure a logged in user (and resgistered)
 const isLoggedIn = async (req, res, next) => {
@@ -27,11 +30,13 @@ const isLoggedIn = async (req, res, next) => {
     next(ex);
   }
 };
+
 //const isAdmin
 
 //secure routes which need to verify the logged in user (adding isLoggedIn) secure admin with isAdmin
 
 //auth: ensure that there is a valid token (use the middleware in the /api/auth/me route)
+//login
 app.post('/api/auth/login', async (req, res, next) => {
   try {
     res.send(await authenticate(req.body));
@@ -41,6 +46,7 @@ app.post('/api/auth/login', async (req, res, next) => {
   }
 });
 
+//signup
 app.post('/api/auth/register', async (req, res, next) => {
   try {
     res.send(await createUser(req.body));
@@ -63,19 +69,10 @@ app.get('/api/auth/me', isLoggedIn, async (req, res, next) => {
 //USERS
 //will need to add is admin middleware
 //returns array of users
+//fetchUserInfo
 app.get('/api/users', async (req, res, next) => {
   try {
     res.send(await fetchUsers());
-  }
-  catch (ex) {
-    next(ex);
-  }
-});
-
-//returns an array of carts for a user (can anyone see? admin only?)
-app.get('/api/users/:id/carts', async (req, res, next) => {
-  try {
-    res.send(await fetchCarts(req.params.id));
   }
   catch (ex) {
     next(ex);
@@ -103,37 +100,24 @@ app.get('/api/products', async (req, res, next) => {
   }
 });
 
-//admin only. create new products
+//admin only. createProduct
 app.post('/api/products', async (req, res, next) => {
   try {
     res.status(201).send(await createProduct(req.body));
-  } catch(ex) {
+  } catch (ex) {
     next(ex);
   }
 });
 
-//create a 
-app.post('api/products/')
+//updateProduct //admin only
 
-//post carts "favorite?"
-//post cartedproducts?
-//a product_id returns the created favorite with a status code of 201
-// app.post('/api/users/:id/favorites', isLoggedIn, async(req, res, next)=> {
-//   try {
-//     res.status(201).send(await createFavorite({ user_id: req.params.id, product_id: req.body.product_id}));
-//   }
-//   catch(ex){
-//     next(ex);
-//   }
-// });
+//deleteProduct //admin only
+app.delete('/api/products')
 
-app.delete('/api/users/:user_id/cart_products/:id')
+//addToCart
+//removeFromCart
+//checkout (deletes cart and adds to order history)
 
-//app.delete(products)
-//functionality i need for site
-//admin get all users, products, carts 
-//admin delete all users, products
-//admin change products
 
 app.use((err, req, res, next) => {
   console.log(err);
@@ -148,22 +132,22 @@ const init = async () => {
   await createTables();
   console.log('tables created');
 
-  const [moe, lucy, ethyl, curly, foo, bar, bazz, quq, fip] = await Promise.all([
-    createUser({ email: 'moe@email.com', password: 'm_pw', is_admin: false }),
-    createUser({ email: 'lucy@email.com', password: 'l_pw', is_admin: false }),
-    createUser({ email: 'ethyl@email.com', password: 'e_pw', is_admin: false }),
-    createUser({ email: 'curly@email.com', password: 'c_pw', is_admin: false}),
-    createProduct({ name: 'foo' }),
-    createProduct({ name: 'bar' }),
-    createProduct({ name: 'bazz' }),
-    createProduct({ name: 'quq' }),
-    createProduct({ name: 'fip' })
-  ]);
+  // const [moe, lucy, ethyl, curly, foo, bar, bazz, quq, fip] = await Promise.all([
+  //   createUser({ email: 'moe@email.com', password: 'm_pw', is_admin: false }),
+  //   createUser({ email: 'lucy@email.com', password: 'l_pw', is_admin: false }),
+  //   createUser({ email: 'ethyl@email.com', password: 'e_pw', is_admin: false }),
+  //   createUser({ email: 'curly@email.com', password: 'c_pw', is_admin: false }),
+  //   createProduct({ name: 'foo' }),
+  //   createProduct({ name: 'bar' }),
+  //   createProduct({ name: 'bazz' }),
+  //   createProduct({ name: 'quq' }),
+  //   createProduct({ name: 'fip' })
+  // ]);
 
-  console.log(await fetchUsers());
-  console.log(await fetchProducts());
+  // console.log(await fetchUsers());
+  // console.log(await fetchProducts());
 
-  console.log(await fetchCarts(moe.id));
+  // console.log(await fetchCarts(moe.id));
   // const favorite = await createCarts({ user_id: moe.id, product_id: foo.id });
   app.listen(port, () => console.log(`listening on port ${port}`));
 };

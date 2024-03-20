@@ -1,56 +1,64 @@
+//imports
 const pg = require('pg');
 const client = new pg.Client(process.env.DATABASE_URL || 'postgres://localhost/unit4_career_sim');
-const uuid = require('uuid');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const uuid = require('uuid'); //generate unique code
+const bcrypt = require('bcrypt'); //password encryption
+const jwt = require('jsonwebtoken'); //my drive
 const JWT = process.env.JWT || 'shhh';
 
-const createTables = async() => {
+//create tables
+const createTables = async () => {
   const SQL = `
       DROP TABLE IF EXISTS carted_products;
-      DROP TABLE IF EXISTS carts;
       DROP TABLE IF EXISTS users;
       DROP TABLE IF EXISTS products;
-      DROP TYPE IF EXISTS status;
+      CREATE TABLE users(
+        id UUID DEFAULT gen_random_uuid(),
+        email VARCHAR(100) UNIQUE NOT NULL,
+        password VARCHAR(100),
+        address VARCHAR(255),
+        payment_info VARCHAR(16),
+        is_admin BOOLEAN DEFAULT FALSE,
+        PRIMARY KEY (id)
+      );
       CREATE TABLE products(
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name VARCHAR(100),
-        is_available BOOLEAN DEFAULT FALSE,
+        id UUID DEFAULT gen_random_uuid(),
+        name VARCHAR(100) UNIQUE NOT NULL,
         price INTEGER DEFAULT 0,
         description VARCHAR(255),
-        qty INTEGER DEFAULT 0
-      );
-      CREATE TABLE users(
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        email VARCHAR(100),
-        password VARCHAR(100),
-        is_admin BOOLEAN DEFAULT FALSE,
-        UNIQUE (email)
-      );
-      CREATE TYPE status AS ENUM ('pending', 'complete');
-      CREATE TABLE carts( will want to remove, this is too hard for me.
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES users(id) NOT NULL,
-        current_status status
+        inventory INTEGER DEFAULT 0,
+        is_available BOOLEAN DEFAULT FALSE,
+        PRIMARY KEY (id)
       );
       CREATE TABLE carted_products(
-        cart_id UUID REFERENCES carts(id) NOT NULL,
+        id UUID DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) NOT NULL,
         product_id UUID REFERENCES products(id) NOT NULL,
-        CONTRAINT unique_user_and_product_id UNIQUE (product_id, user_id),
-        qty INTEGER DEFAULT 0
+        qty INTEGER DEFAULT 0,
+        CONSTRAINT unique_user_and_product_id UNIQUE (product_id, user_id),
+        PRIMARY KEY (id)
       );
     `;
   await client.query(SQL);
 };
 
+//create user
 const createUser = async ({ email, password, is_admin }) => {
   const SQL = `
-      INSERT INTO users(id, email, password, is_admin) VALUES($1, $2, $3, $4) RETURNING *
+      INSERT INTO users(id, email, password, address, payment_info, is_admin) VALUES($1, $2, $3, $4, $5, $6) RETURNING *
     `;
-  const response = await client.query(SQL, [uuid.v4(), email, await bcrypt.hash(password, 5),is_admin]);
+  const response = await client.query(SQL, [uuid.v4(), email, await bcrypt.hash(password, 5), is_admin]);
   return response.rows[0];
 };
-
+//createCartedProduct
+const createCartedProducts = async ({ cart_id, user_id, qty }) => {
+  const SQL = `
+    INSERT INTO carted_products(cart_id, product_id, qty) VALUES($1, $2, $3) RETURNING *
+  `;
+  const response = await client.query(SQL, cart_id, user_id, qty);
+  return response.rows[0];
+};
+//create product
 const createProduct = async ({ name, is_available, price, description, qty }) => {
   const SQL = `
     INSERT INTO products(id, name, is_available, price, description, qty) VALUES($1, $2, $3, $4, $5, $6) RETURNING *
@@ -58,21 +66,64 @@ const createProduct = async ({ name, is_available, price, description, qty }) =>
   const response = await client.query(SQL, [uuid.v4(), name, is_available, price, description, qty]);
   return response.rows[0];
 };
+//create order (optional. for capstone but not now.)
 
-// const createCarts = async({ user_id })=> {
-//   const SQL = `
-//     INSERT INTO carts(id, user_id) VALUES($1, $2) RETURNING *
-//   `;
-//   const response = await client.query(SQL, [uuid.v4(), user_id]);
-//   return response.rows[0];
-// };
-
-const createCartedProducts = async({ cart_id, user_id, qty })=> {
+//readUser
+const fetchUsers = async () => {
   const SQL = `
-    INSERT INTO carted_products(cart_id, product_id, qty) VALUES($1, $2, $3) RETURNING *
+    SELECT id, email, address, is_admin FROM users;
   `;
-  const response = await client.query(SQL, cart_id, user_id, qty);
-  return response.rows[0];
+  const response = await client.query(SQL);
+  return response.rows;
+};
+//raed Product --return all products
+const fetchProducts = async () => {
+  const SQL = `
+    SELECT * FROM products;
+  `;
+  const response = await client.query(SQL);
+  return response.rows;
+};
+//read CartedProduct
+const fetchCartedProducts = async ({ user_id }) => {
+  const SQL = `
+    SELECT * FROM carted_products WHERE user_id = $1
+  `;
+  const response = await client.query(SQL, [user_id]);
+  return response.rows;
+};
+//update user
+const updateUser = async () => {
+
+}
+//UpdateProduct
+const updateProduct = async () => {
+
+}
+//update carted product
+const updateCartedProducts = async () => {
+
+}
+//deleteUser
+const deleteUser = async () => {
+  const SQL = `
+  DELETE FROM users WHERE id = $1
+    `;
+  await client.query(SQL, [id]);
+};
+//deleteProduct
+const deleteProduct = async ({ id }) => {
+  const SQL = `
+  DELETE FROM products WHERE id = $1
+`;
+  await client.query(SQL, [id]);
+};
+//deleteCartedProduct
+const deleteCartedProduct = async ({ user_id, id }) => {
+  const SQL = `
+  DELETE FROM carted_products WHERE user_id=$1 AND id=$2
+`;
+  await client.query(SQL, [user_id, id]);
 };
 
 //creating jwt tokens
@@ -117,54 +168,21 @@ const findUserWithToken = async (token) => {
   return response.rows[0];
 };
 
-const fetchUsers = async()=> {
-  const SQL = `
-    SELECT id, email, is_admin FROM users;
-  `;
-  const response = await client.query(SQL);
-  return response.rows;
-};
-
-const fetchProducts = async()=> {
-  const SQL = `
-    SELECT * FROM products;
-  `;
-  const response = await client.query(SQL);
-  return response.rows;
-};
-
-const fetchCarts = async(user_id)=> {
-  const SQL = `
-    SELECT * FROM carts where user_id = $1
-  `;
-  const response = await client.query(SQL, [user_id]);
-  return response.rows;
-};
-
-const fetchCartedProducts = async(user_id)=> {
-  const SQL = `
-    SELECT * FROM carted_products
-  `;
-  const response = await client.query(SQL, [user_id]);
-  return response.rows;
-};
-
-//need to make a destroy
-//destroyProducts
-//destroy
-
 module.exports = {
   client,
   createTables,
   createUser,
   createProduct,
-  createCarts,
   createCartedProducts,
+  updateUser,
+  updateProduct,
+  updateCartedProducts,
+  deleteUser,
+  deleteProduct,
+  deleteCartedProduct,
   authenticate,
   findUserWithToken,
   fetchProducts,
   fetchUsers,
-  fetchCarts,
   fetchCartedProducts
-
 };
