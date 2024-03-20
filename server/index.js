@@ -132,22 +132,21 @@ const init = async () => {
   await createTables();
   console.log('tables created');
 
-  // const [moe, lucy, ethyl, curly, foo, bar, bazz, quq, fip] = await Promise.all([
-  //   createUser({ email: 'moe@email.com', password: 'm_pw', is_admin: false }),
-  //   createUser({ email: 'lucy@email.com', password: 'l_pw', is_admin: false }),
-  //   createUser({ email: 'ethyl@email.com', password: 'e_pw', is_admin: false }),
-  //   createUser({ email: 'curly@email.com', password: 'c_pw', is_admin: false }),
-  //   createProduct({ name: 'foo' }),
-  //   createProduct({ name: 'bar' }),
-  //   createProduct({ name: 'bazz' }),
-  //   createProduct({ name: 'quq' }),
-  //   createProduct({ name: 'fip' })
-  // ]);
+  const [moe, lucy, ethyl, curly, foo, bar, bazz, quq, fip] = await Promise.all([
+    createUser({ email: 'moe@email.com', password: 'm_pw', is_admin: false }),
+    createUser({ email: 'lucy@email.com', password: 'l_pw', is_admin: true }),
+    createUser({ email: 'ethyl@email.com', password: 'e_pw', is_admin: false }),
+    createUser({ email: 'curly@email.com', password: 'c_pw', is_admin: false }),
+    // createProduct({ name: 'foo' }),
+    // createProduct({ name: 'bar' }),
+    // createProduct({ name: 'bazz' }),
+    // createProduct({ name: 'quq' }),
+    // createProduct({ name: 'fip' })
+  ]);
 
-  // console.log(await fetchUsers());
+  console.log(await fetchUsers());
   // console.log(await fetchProducts());
 
-  // console.log(await fetchCarts(moe.id));
   // const favorite = await createCarts({ user_id: moe.id, product_id: foo.id });
   app.listen(port, () => console.log(`listening on port ${port}`));
 };
