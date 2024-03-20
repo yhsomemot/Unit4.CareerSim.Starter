@@ -110,52 +110,73 @@ app.post('/api/products', async (req, res, next) => {
 });
 
 //updateProduct //admin only
-app.put('/api/products/:id', async (req, res, next)=> {
+app.put('/api/product/:id', async (req, res, next) => {
   try {
-    res.send(await updateProduct());
-  } catch(ex) {
-
+    res.send(await updateProduct(req.body));
+  } catch (ex) {
+    next(ex);
   }
 });
 //updateUsers
+app.put('/api/user/:id', async (req, res, next) => {
+  try {
+    res.send(await updateUser(req.body));
+  } catch (ex) {
+    next(ex);
+  }
+});
 //update cartedProducts
-
+app.put('/api/user/:id/cartedProducts/:id', async (req, res, next) => {
+  try {
+    res.send(await updateCartedProducts(req.body));
+  } catch (ex) {
+    next(ex);
+  }
+});
 //deleteProduct //admin only
-app.delete('/api/products/:id', async(req, res, next)=> {
-  try{
+app.delete('/api/products/:id', async (req, res, next) => {
+  try {
     res.status(204).send(await deleteProduct(req.params.id));
-  } catch(ex) {
+  } catch (ex) {
     next(ex);
   }
 });
 
 //deleteUser
-app.delete('/api/users/:id', async(req, res, next)=> {
-  try{
+app.delete('/api/users/:id', async (req, res, next) => {
+  try {
     res.status(204).send(await deleteUser(req.params.id));
-  } catch(ex) {
+  } catch (ex) {
     next(ex);
   }
 });
 //addToCart
 app.post('/api/users/:id/cartedProducts', async (req, res, next) => {
   try {
-      res.status(201).send(await createCartedProducts({ user_id: req.params.id, product_id: req.body.product_id }));
+    res.status(201).send(await createCartedProducts({ user_id: req.params.id, product_id: req.body.product_id }));
   }
   catch (ex) {
-      next(ex);
+    next(ex);
   }
 });
 //removeFromCart
-app.delete('/api/users/:user_id/cartedProduct/:id', isLoggedIn, async(req, res, next)=> {
-  try{
-    await deleteCartedProduct({user_id: req.params.user_id, id: req.params.id});
+app.delete('/api/users/:user_id/cartedProduct/:id', isLoggedIn, async (req, res, next) => {
+  try {
+    await deleteCartedProduct({ user_id: req.params.user_id, id: req.params.id });
     res.sendStatus(204);
-  } catch(ex) {
+  } catch (ex) {
     next(ex);
   }
 });
 //checkout deleteCartedProducts(deletes cart and adds to order history)
+app.delete('/api/users/:user_id/cartedProduct', isLoggedIn, async (req, res, next) => {
+  try {
+    await deleteCartedProduct({ user_id: req.params.user_id, id: req.params.id });
+    res.sendStatus(204);
+  } catch (ex) {
+    next(ex);
+  }
+});
 
 
 app.use((err, req, res, next) => {
@@ -183,8 +204,8 @@ const init = async () => {
     createProduct({ name: 'fip' })
   ]);
 
-  console.log("users", await fetchUsers());
-  console.log("products", await fetchProducts());
+  // console.log("users", await fetchUsers());
+  // console.log("products", await fetchProducts());
 
   // const favorite = await createCarts({ user_id: moe.id, product_id: foo.id });
   app.listen(port, () => console.log(`listening on port ${port}`));
