@@ -36,6 +36,7 @@ const createTables = async () => {
         product_id UUID REFERENCES products(id) NOT NULL,
         qty INTEGER DEFAULT 0,
         CONSTRAINT unique_user_and_product_id UNIQUE (product_id, user_id),
+        CONSTRAINT qty_less_than_inventory CHECK (qty <= products(inventory)),
         PRIMARY KEY (id)
       );
     `;
@@ -177,7 +178,7 @@ const findUserWithToken = async (token) => {
 
   }
   const SQL = `
-      SELECT id, username FROM users WHERE id=$1;
+      SELECT id, username, isAdmin FROM users WHERE id=$1;
     `;
   const response = await client.query(SQL, [id]);
   if (!response.rows.length) {
@@ -187,6 +188,15 @@ const findUserWithToken = async (token) => {
   }
   return response.rows[0];
 };
+
+async function checkIsAdmin(token){
+  const loggedInUser = await findUserWithToken(token);
+  if(!loggedInUser.isAdmin){
+    const error = Error('not authorized');
+    error.status = 401;
+    throw error;
+  }
+}
 
 module.exports = {
   client,
@@ -204,5 +214,6 @@ module.exports = {
   findUserWithToken,
   fetchProducts,
   fetchUsers,
-  fetchCartedProducts
+  fetchCartedProducts,
+  checkIsAdmin
 };
