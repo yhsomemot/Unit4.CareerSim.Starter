@@ -34,10 +34,11 @@ const isLoggedIn = async (req, res, next) => {
 //const isAdmin
 const isAdmin = async (req, res, next) => {
   try {
-    req.user.isAdmin = await checkIsAdmin(req.headers.authorization);
+    if (!req.user.is_admin){
+      res.status(401).send("Error");
+    }
     next();
-  }
-  catch (ex) {
+  } catch (ex) {
     next(ex);
   }
 };
@@ -72,9 +73,6 @@ app.get('/api/auth/me', isLoggedIn, async (req, res, next) => {
   }
 });
 
-
-//USERS
-//will need to add is admin middleware
 //fetchUserInfo returns array of users
 app.get('/api/users', isLoggedIn, async (req, res, next) => {
   try {
@@ -95,9 +93,8 @@ app.get('/api/users/:id/cartedProducts', isLoggedIn, async (req, res, next) => {
   }
 });
 
-//need to add admin middleware
 //returns an an array of products
-app.get('/api/products', async (req, res, next) => {
+app.get('/api/users/:id/products', async (req, res, next) => {
   try {
     res.send(await fetchProducts());
   }
@@ -107,7 +104,7 @@ app.get('/api/products', async (req, res, next) => {
 });
 
 //admin only. createProduct
-app.post('/api/products', isLoggedIn, isAdmin, async (req, res, next) => {
+app.post('/api/users/:id/products', isAdmin, async (req, res, next) => {
   try {
     res.status(201).send(await createProduct(req.body));
   } catch (ex) {
@@ -116,9 +113,9 @@ app.post('/api/products', isLoggedIn, isAdmin, async (req, res, next) => {
 });
 
 //updateProduct //admin only
-app.put('/api/product/:id', isLoggedIn, isAdmin, async (req, res, next) => {
+app.put('/api/user/:id/product/:id', isAdmin, async (req, res, next) => {
   try {
-    res.send(await updateProduct(req.body));
+    res.status(201).send(await updateProduct(req.body));
   } catch (ex) {
     next(ex);
   }
@@ -126,7 +123,7 @@ app.put('/api/product/:id', isLoggedIn, isAdmin, async (req, res, next) => {
 //updateUsers
 app.put('/api/user/:id', isLoggedIn, async (req, res, next) => {
   try {
-    res.send(await updateUser(req.body));
+    res.status(201).send(await updateUser(req.body));
   } catch (ex) {
     next(ex);
   }
@@ -134,13 +131,13 @@ app.put('/api/user/:id', isLoggedIn, async (req, res, next) => {
 //update cartedProducts
 app.put('/api/user/:id/cartedProducts/:id', isLoggedIn, async (req, res, next) => {
   try {
-    res.send(await updateCartedProducts(req.body));
+    res.status(201).send(await updateCartedProducts(req.body));
   } catch (ex) {
     next(ex);
   }
 });
 //deleteProduct //admin only
-app.delete('/api/products/:id', isLoggedIn, isAdmin, async (req, res, next) => {
+app.delete('/api/users/:id/products/:id', isLoggedIn, isAdmin, async (req, res, next) => {
   try {
     res.status(204).send(await deleteProduct(req.params.id));
   } catch (ex) {
@@ -174,15 +171,8 @@ app.delete('/api/users/:user_id/cartedProduct/:id', isLoggedIn, async (req, res,
     next(ex);
   }
 });
-//checkout deleteCartedProducts(deletes cart and adds to order history)
-app.delete('/api/users/:user_id/cartedProduct', isLoggedIn, async (req, res, next) => {
-  try {
-    await deleteCartedProduct({ user_id: req.params.user_id, id: req.params.id });
-    res.sendStatus(204);
-  } catch (ex) {
-    next(ex);
-  }
-});
+
+//delete after checkout
 
 
 app.use((err, req, res, next) => {
@@ -213,7 +203,6 @@ const init = async () => {
   // console.log("users", await fetchUsers());
   // console.log("products", await fetchProducts());
 
-  // const favorite = await createCarts({ user_id: moe.id, product_id: foo.id });
   app.listen(port, () => console.log(`listening on port ${port}`));
 };
 

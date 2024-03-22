@@ -36,7 +36,6 @@ const createTables = async () => {
         product_id UUID REFERENCES products(id) NOT NULL,
         qty INTEGER DEFAULT 0,
         CONSTRAINT unique_user_and_product_id UNIQUE (product_id, user_id),
-        CONSTRAINT qty_less_than_inventory CHECK (qty <= products(inventory)),
         PRIMARY KEY (id)
       );
     `;
@@ -84,6 +83,7 @@ const fetchProducts = async () => {
   const response = await client.query(SQL);
   return response.rows;
 };
+
 //read CartedProduct
 const fetchCartedProducts = async ({ user_id }) => {
   const SQL = `
@@ -104,14 +104,14 @@ const updateUser = async ({ email, password, address, payment_info, is_admin }) 
   return response.rows[0];
 };
 //UpdateProduct
-const updateProduct = async ({ name, price, description, inventory }) => {
+const updateProduct = async ({ name, price, description, inventory, id }) => {
   const SQL = `
     UPDATE products
     SET name=$1, price=$2, description=$3, inventory=$4
     WHERE id=$5
     RETIRNING *
   `;
-  const result = await client.query(SQL,[name, price, description, inventory]);
+  const result = await client.query(SQL,[name, price, description, inventory, id]);
   return response.rows[0];
 };
 //update carted product
@@ -188,15 +188,6 @@ const findUserWithToken = async (token) => {
   }
   return response.rows[0];
 };
-
-async function checkIsAdmin(token){
-  const loggedInUser = await findUserWithToken(token);
-  if(!loggedInUser.isAdmin){
-    const error = Error('not authorized');
-    error.status = 401;
-    throw error;
-  }
-}
 
 module.exports = {
   client,
