@@ -14,8 +14,7 @@ const {
   findUserWithToken,
   fetchProducts,
   fetchUsers,
-  fetchCartedProducts,
-  checkIsAdmin
+  fetchCartedProducts
 } = require('./db');
 const express = require('express');
 const app = express();
@@ -94,7 +93,7 @@ app.get('/api/users/:id/cartedProducts', isLoggedIn, async (req, res, next) => {
 });
 
 //returns an an array of products
-app.get('/api/users/:id/products', async (req, res, next) => {
+app.get('/api/products', async (req, res, next) => {
   try {
     res.send(await fetchProducts());
   }
@@ -113,9 +112,9 @@ app.post('/api/users/:id/products', isAdmin, async (req, res, next) => {
 });
 
 //updateProduct //admin only
-app.put('/api/user/:id/product/:id', isAdmin, async (req, res, next) => {
+app.put('/api/user/:userId/product/:id', isLoggedIn, isAdmin, async (req, res, next) => {
   try {
-    res.status(201).send(await updateProduct(req.body));
+    res.status(201).send(await updateProduct({...req.body, id: req.params.id}));
   } catch (ex) {
     next(ex);
   }
@@ -129,7 +128,7 @@ app.put('/api/user/:id', isLoggedIn, async (req, res, next) => {
   }
 });
 //update cartedProducts
-app.put('/api/user/:id/cartedProducts/:id', isLoggedIn, async (req, res, next) => {
+app.put('/api/user/:userId/cartedProducts/:id', isLoggedIn, async (req, res, next) => {
   try {
     res.status(201).send(await updateCartedProducts(req.body));
   } catch (ex) {
