@@ -85,9 +85,9 @@ const fetchProducts = async () => {
 };
 
 //return single product
-const fetchSingleProduct = async (id) => {
+const fetchSingleProduct = async ({id}) => {
   const SQL = `
-  SELECT * FROM products WHERE id=$1;
+  SELECT * FROM products WHERE id=$1
   `;
   const result = await client.query(SQL, [id]);
   return result.rows[0];
@@ -102,14 +102,14 @@ const fetchCartedProducts = async ({ user_id }) => {
   return result.rows;
 };
 //update user
-const updateUser = async ({ email, password, address, payment_info, is_admin }) => {
+const updateUser = async ({ email, password, address, payment_info, is_admin, id }) => {
   const SQL = `
     UPDATE users
     SET email=$1, password=$2, address=$3, payment_info=$4, is_admin=$5
     WHERE id=$6
     RETURNING *
   `;
-  const result = await client.query(SQL,[email, password, address, payment_info, is_admin ]);
+  const result = await client.query(SQL,[email, password, address, payment_info, is_admin, id ]);
   return result.rows[0];
 };
 //UpdateProduct

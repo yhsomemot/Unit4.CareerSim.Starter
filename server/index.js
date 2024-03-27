@@ -83,7 +83,7 @@ app.get('/api/users', isLoggedIn, async (req, res, next) => {
   }
 });
 
-//returns an array of cartedProducts for a user
+//returns an array of cartedProducts for a user ???????????
 app.get('/api/users/:id/cartedProducts', isLoggedIn, async (req, res, next) => {
   try {
     res.send(await fetchCartedProducts(req.params.id));
@@ -102,16 +102,14 @@ app.get('/api/products', async (req, res, next) => {
     next(ex);
   }
 });
-
 //returns single product
-app.get('/api/products/:id', async (req, res, next) => {
+app.get('/api/product/:id', async (req, res, next) => {
   try {
     res.send(await fetchSingleProduct({id: req.params.id}));
   } catch (ex) {
     next(ex);
   }
 });
-
 //admin only. createProduct
 app.post('/api/products', isLoggedIn, isAdmin, async (req, res, next) => {
   try {
@@ -120,7 +118,6 @@ app.post('/api/products', isLoggedIn, isAdmin, async (req, res, next) => {
     next(ex);
   }
 });
-
 //updateProduct //admin only
 app.put('/api/product/:id', isLoggedIn, isAdmin, async (req, res, next) => {
   try {
@@ -132,7 +129,7 @@ app.put('/api/product/:id', isLoggedIn, isAdmin, async (req, res, next) => {
 //updateUsers
 app.put('/api/user/:id', isLoggedIn, async (req, res, next) => {
   try {
-    res.status(201).send(await updateUser({...req.body, user_id: req.params.id}));
+    res.status(201).send(await updateUser({...req.body, id: req.params.id}));
   } catch (ex) {
     next(ex);
   }
