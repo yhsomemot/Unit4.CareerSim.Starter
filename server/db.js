@@ -34,7 +34,7 @@ const createTables = async () => {
         id UUID DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) NOT NULL,
         product_id UUID REFERENCES products(id) NOT NULL,
-        qty INTEGER DEFAULT 0,
+        qty INTEGER DEFAULT 1,
         CONSTRAINT unique_user_and_product_id UNIQUE (product_id, user_id),
         PRIMARY KEY (id)
       );
@@ -51,11 +51,12 @@ const createUser = async ({ email, password, address, payment_info, is_admin }) 
   return result.rows[0];
 };
 //createCartedProduct
-const createCartedProducts = async ({ cart_id, user_id, qty }) => {
+const createCartedProducts = async ({ user_id, body }) => {
   const SQL = `
     INSERT INTO carted_products(user_id, product_id, qty) VALUES($1, $2, $3) RETURNING *
   `;
-  const result = await client.query(SQL, [user_id, product_id, qty]);
+  const result = await client.query(SQL, [user_id, body.product_id, body.qty ]);
+  console.log(result)
   return result.rows[0];
 };
 //create product
@@ -109,7 +110,7 @@ const updateUser = async ({ email, password, address, payment_info, is_admin, id
     WHERE id=$6
     RETURNING *
   `;
-  const result = await client.query(SQL,[email, password, address, payment_info, is_admin, id ]);
+  const result = await client.query(SQL,[email, await bcrypt.hash(password, 5), address, payment_info, is_admin, id ]);
   return result.rows[0];
 };
 //UpdateProduct

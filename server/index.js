@@ -162,9 +162,9 @@ app.put('/api/user/:userId/cartedProducts/:id', isLoggedIn, async (req, res, nex
 });
 
 //addToCart
-app.post('/api/users/:userId/cartedProducts/:id', isLoggedIn, async (req, res, next) => {
+app.post('/api/users/:userId/cartedProducts', isLoggedIn, async (req, res, next) => {
   try {
-    res.status(201).send(await createCartedProducts({ user_id: req.params.userId, product_id: req.body.product_id }));
+    res.status(201).send(await createCartedProducts({ user_id: req.params.userId, body: req.body }));
   }
   catch (ex) {
     next(ex);
