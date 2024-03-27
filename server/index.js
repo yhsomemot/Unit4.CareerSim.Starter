@@ -83,16 +83,6 @@ app.get('/api/users', isLoggedIn, async (req, res, next) => {
   }
 });
 
-//returns an array of cartedProducts for a user ???????????
-app.get('/api/users/:id/cartedProducts', isLoggedIn, async (req, res, next) => {
-  try {
-    res.send(await fetchCartedProducts(req.params.id));
-  }
-  catch (ex) {
-    next(ex);
-  }
-});
-
 //returns an an array of products
 app.get('/api/products', async (req, res, next) => {
   try {
@@ -134,6 +124,33 @@ app.put('/api/user/:id', isLoggedIn, async (req, res, next) => {
     next(ex);
   }
 });
+//deleteProduct //admin only
+app.delete('/api/product/:id', isLoggedIn, isAdmin, async (req, res, next) => {
+  try {
+    res.status(204).send(await deleteProduct({id: req.params.id}));
+  } catch (ex) {
+    next(ex);
+  }
+});
+//deleteUser
+app.delete('/api/user/:id', isLoggedIn, async (req, res, next) => {
+  try {
+    res.status(204).send(await deleteUser({id: req.params.id}));
+  } catch (ex) {
+    next(ex);
+  }
+});
+
+//returns an array of cartedProducts for a user ???????????
+app.get('/api/users/:id/cartedProducts', isLoggedIn, async (req, res, next) => {
+  try {
+    res.send(await fetchCartedProducts(req.params.id));
+  }
+  catch (ex) {
+    next(ex);
+  }
+});
+
 //update cartedProducts
 app.put('/api/user/:userId/cartedProducts/:id', isLoggedIn, async (req, res, next) => {
   try {
@@ -143,27 +160,11 @@ app.put('/api/user/:userId/cartedProducts/:id', isLoggedIn, async (req, res, nex
     next(ex);
   }
 });
-//deleteProduct //admin only
-app.delete('/api/users/:userId/products/:id', isLoggedIn, isAdmin, async (req, res, next) => {
-  try {
-    res.status(204).send(await deleteProduct({user_id: req.params.id}));
-  } catch (ex) {
-    next(ex);
-  }
-});
 
-//deleteUser
-app.delete('/api/users/:id', isLoggedIn, async (req, res, next) => {
-  try {
-    res.status(204).send(await deleteUser({id: req.params.id}));
-  } catch (ex) {
-    next(ex);
-  }
-});
 //addToCart
-app.post('/api/users/:id/cartedProducts', isLoggedIn, async (req, res, next) => {
+app.post('/api/users/:userId/cartedProducts/:id', isLoggedIn, async (req, res, next) => {
   try {
-    res.status(201).send(await createCartedProducts({ user_id: req.params.id, product_id: req.body.product_id }));
+    res.status(201).send(await createCartedProducts({ user_id: req.params.userId, product_id: req.body.product_id }));
   }
   catch (ex) {
     next(ex);

@@ -53,9 +53,9 @@ const createUser = async ({ email, password, address, payment_info, is_admin }) 
 //createCartedProduct
 const createCartedProducts = async ({ cart_id, user_id, qty }) => {
   const SQL = `
-    INSERT INTO carted_products(cart_id, product_id, qty) VALUES($1, $2, $3) RETURNING *
+    INSERT INTO carted_products(user_id, product_id, qty) VALUES($1, $2, $3) RETURNING *
   `;
-  const result = await client.query(SQL, cart_id, user_id, qty);
+  const result = await client.query(SQL, [user_id, product_id, qty]);
   return result.rows[0];
 };
 //create product
@@ -136,7 +136,7 @@ const result = await client.query(SQL,[user_id, product_id, qty]);
 return result.rows[0];
 }
 //deleteUser
-const deleteUser = async () => {
+const deleteUser = async ({id}) => {
   const SQL = `
   DELETE FROM users WHERE id = $1
     `;
