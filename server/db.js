@@ -84,6 +84,15 @@ const fetchProducts = async () => {
   return result.rows;
 };
 
+//return single product
+const fetchSingleProduct = async (id) => {
+  const SQL = `
+  SELECT * FROM products WHERE id=$1;
+  `;
+  const result = await client.query(SQL, [id]);
+  return result.rows[0];
+};
+
 //read CartedProduct
 const fetchCartedProducts = async ({ user_id }) => {
   const SQL = `
@@ -116,7 +125,7 @@ const updateProduct = async ({ name, price, description, inventory, id }) => {
   return result.rows[0];
 };
 //update carted product
-const updateCartedProducts = async ({ user_id, product_id, qty }) => {
+const updateCartedProducts = async (user_id, product_id, qty) => {
   const SQL = `
     UPDATE carted_products
     SET user_id=$1, product_id=$2, qty=$3
@@ -163,7 +172,7 @@ const authenticate = async ({ email, password }) => {
     throw error;
   }
   const token = await jwt.sign({ id: result.rows[0].id }, JWT);
-  return { token: result.rows[0].id };
+  return { token: token };
 };
 
 //useing jwt token to secure the login process
@@ -208,5 +217,6 @@ module.exports = {
   findUserWithToken,
   fetchProducts,
   fetchUsers,
-  fetchCartedProducts
+  fetchCartedProducts,
+  fetchSingleProduct
 };

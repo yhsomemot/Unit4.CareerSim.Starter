@@ -14,7 +14,8 @@ const {
   findUserWithToken,
   fetchProducts,
   fetchUsers,
-  fetchCartedProducts
+  fetchCartedProducts,
+  fetchSingleProduct
 } = require('./db');
 const express = require('express');
 const app = express();
@@ -102,8 +103,17 @@ app.get('/api/products', async (req, res, next) => {
   }
 });
 
+//returns single product
+app.get('/api/products/:id', async (req, res, next) => {
+  try {
+    res.send(await fetchSingleProduct({id: req.params.id}));
+  } catch (ex) {
+    next(ex);
+  }
+});
+
 //admin only. createProduct
-app.post('/api/users/:id/products', isAdmin, async (req, res, next) => {
+app.post('/api/products', isLoggedIn, isAdmin, async (req, res, next) => {
   try {
     res.status(201).send(await createProduct(req.body));
   } catch (ex) {
@@ -112,7 +122,7 @@ app.post('/api/users/:id/products', isAdmin, async (req, res, next) => {
 });
 
 //updateProduct //admin only
-app.put('/api/user/:userId/product/:id', isLoggedIn, isAdmin, async (req, res, next) => {
+app.put('/api/product/:id', isLoggedIn, isAdmin, async (req, res, next) => {
   try {
     res.status(201).send(await updateProduct({...req.body, id: req.params.id}));
   } catch (ex) {
@@ -122,7 +132,7 @@ app.put('/api/user/:userId/product/:id', isLoggedIn, isAdmin, async (req, res, n
 //updateUsers
 app.put('/api/user/:id', isLoggedIn, async (req, res, next) => {
   try {
-    res.status(201).send(await updateUser(req.body));
+    res.status(201).send(await updateUser({...req.body, user_id: req.params.id}));
   } catch (ex) {
     next(ex);
   }
@@ -130,15 +140,16 @@ app.put('/api/user/:id', isLoggedIn, async (req, res, next) => {
 //update cartedProducts
 app.put('/api/user/:userId/cartedProducts/:id', isLoggedIn, async (req, res, next) => {
   try {
-    res.status(201).send(await updateCartedProducts(req.body));
+    //if no object to wrap params, don't include curly brackets.
+    res.status(201).send(await updateCartedProducts( req.params.userId, req.params.id));
   } catch (ex) {
     next(ex);
   }
 });
 //deleteProduct //admin only
-app.delete('/api/users/:id/products/:id', isLoggedIn, isAdmin, async (req, res, next) => {
+app.delete('/api/users/:userId/products/:id', isLoggedIn, isAdmin, async (req, res, next) => {
   try {
-    res.status(204).send(await deleteProduct(req.params.id));
+    res.status(204).send(await deleteProduct({user_id: req.params.id}));
   } catch (ex) {
     next(ex);
   }
@@ -147,7 +158,7 @@ app.delete('/api/users/:id/products/:id', isLoggedIn, isAdmin, async (req, res, 
 //deleteUser
 app.delete('/api/users/:id', isLoggedIn, async (req, res, next) => {
   try {
-    res.status(204).send(await deleteUser(req.params.id));
+    res.status(204).send(await deleteUser({id: req.params.id}));
   } catch (ex) {
     next(ex);
   }
@@ -162,9 +173,9 @@ app.post('/api/users/:id/cartedProducts', isLoggedIn, async (req, res, next) => 
   }
 });
 //removeFromCart
-app.delete('/api/users/:user_id/cartedProduct/:id', isLoggedIn, async (req, res, next) => {
+app.delete('/api/users/:userId/cartedProduct/:id', isLoggedIn, async (req, res, next) => {
   try {
-    await deleteCartedProduct({ user_id: req.params.user_id, id: req.params.id });
+    await deleteCartedProduct({ user_id: req.params.userId, product_id: req.params.id });
     res.sendStatus(204);
   } catch (ex) {
     next(ex);
