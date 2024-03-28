@@ -15,7 +15,8 @@ const {
   fetchProducts,
   fetchUsers,
   fetchCartedProducts,
-  fetchSingleProduct
+  fetchSingleProduct,
+  fetchAllCartedProducts
 } = require('./db');
 const express = require('express');
 const app = express();
@@ -142,9 +143,19 @@ app.delete('/api/user/:id', isLoggedIn, async (req, res, next) => {
 });
 
 //returns an array of cartedProducts for a user ???????????
-app.get('/api/users/:id/cartedProducts', isLoggedIn, async (req, res, next) => {
+app.get('/api/users/:userId/cartedProducts', async (req, res, next) => {
   try {
-    res.send(await fetchCartedProducts(req.params.id));
+    res.send(await fetchCartedProducts(req.params.userId));
+  }
+  catch (ex) {
+    next(ex);
+  }
+});
+
+//get all produts
+app.get('/api/cartedProducts', async (req, res, next) => {
+  try {
+    res.send(await fetchAllCartedProducts());
   }
   catch (ex) {
     next(ex);
@@ -161,10 +172,19 @@ app.put('/api/user/:userId/cartedProducts/:id', isLoggedIn, async (req, res, nex
   }
 });
 
-//addToCart
+//addToCart (create cart)
+// app.post('/api/users/:userId/cartedProducts', isLoggedIn, async (req, res, next) => {
+//   try {
+//     res.status(201).send(await createCartedProducts({ user_id: req.params.userId, body: req.body }));
+//   }
+//   catch (ex) {
+//     next(ex);
+//   }
+// });
+
 app.post('/api/users/:userId/cartedProducts', isLoggedIn, async (req, res, next) => {
   try {
-    res.status(201).send(await createCartedProducts({ user_id: req.params.userId, body: req.body }));
+    res.status(201).send(await createCartedProducts({ user_id: req.params.userId, product_id: req.body.product_id, qty: req.body.qty }));
   }
   catch (ex) {
     next(ex);
@@ -205,9 +225,15 @@ const init = async () => {
     createProduct({ name: 'bar', price: 14 }),
     createProduct({ name: 'bazz' }),
     createProduct({ name: 'quq' }),
-    createProduct({ name: 'fip' })
+    createProduct({ name: 'fip' }),
+  ]);
+  const dummyCartedProducts = await Promise.all([
+    createCartedProducts({ user_id: moe.id, product_id: foo.id, qty: 1 }),
+    createCartedProducts({ user_id: curly.id, product_id: bazz.id, qty: 6 }),
+    createCartedProducts({ user_id: curly.id, product_id: foo.id, qty: 4 })
   ]);
 
+  // console.log("carts", await fetchAllCartedProducts());
   // console.log("users", await fetchUsers());
   // console.log("products", await fetchProducts());
 

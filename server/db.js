@@ -9,7 +9,6 @@ const JWT = process.env.JWT || 'shhh';
 
 //create tables
 const createTables = async () => {
-  await client.query(`DROP TABLE IF EXISTS carted_products`)
   const SQL = `
       DROP TABLE IF EXISTS carted_products;
       DROP TABLE IF EXISTS users;
@@ -52,14 +51,23 @@ const createUser = async ({ email, password, address, payment_info, is_admin }) 
   return result.rows[0];
 };
 //createCartedProduct
-const createCartedProducts = async ({ user_id, body }) => {
+// const createCartedProducts = async ({ user_id, body }) => {
+//   const SQL = `
+//     INSERT INTO carted_products(user_id, product_id, qty) VALUES($1, $2, $3) RETURNING *
+//   `;
+//   const result = await client.query(SQL, [ user_id, body.product_id, body.qty ]);
+//   console.log(result)
+//   return result.rows[0];
+// };
+const createCartedProducts = async ({ user_id, product_id, qty }) => {
   const SQL = `
-    INSERT INTO carted_products(user_id, product_id, qty) VALUES($1, $2, $3) RETURNING *
+    INSERT INTO carted_products( user_id, product_id, qty) VALUES($1, $2, $3) RETURNING *
   `;
-  const result = await client.query(SQL, [user_id, body.product_id, body.qty ]);
+  const result = await client.query(SQL, [user_id, product_id, qty ]);
   console.log(result)
   return result.rows[0];
 };
+
 //create product
 const createProduct = async ({ name, price, description, inventory }) => {
   const SQL = `
@@ -103,6 +111,16 @@ const fetchCartedProducts = async ({ user_id }) => {
   const result = await client.query(SQL, [user_id]);
   return result.rows;
 };
+
+//read all carteProducts
+const fetchAllCartedProducts = async () => {
+  const SQL = `
+    SELECT * FROM carted_products
+  `;
+  const result = await client.query(SQL);
+  return result.rows;
+};
+
 //update user
 const updateUser = async ({ email, password, address, payment_info, is_admin, id }) => {
   const SQL = `
@@ -220,5 +238,6 @@ module.exports = {
   fetchProducts,
   fetchUsers,
   fetchCartedProducts,
-  fetchSingleProduct
+  fetchSingleProduct,
+  fetchAllCartedProducts
 };
