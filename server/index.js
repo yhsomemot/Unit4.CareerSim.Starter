@@ -142,7 +142,6 @@ app.delete('/api/user/:id', isLoggedIn, async (req, res, next) => {
   }
 });
 
-//returns an array of cartedProducts for a user ???????????
 app.get('/api/users/:userId/cartedProducts', async (req, res, next) => {
   try {
     res.send(await fetchCartedProducts(req.params.userId));
@@ -162,8 +161,8 @@ app.get('/api/cartedProducts', async (req, res, next) => {
   }
 });
 
-//update cartedProducts
-app.put('/api/user/:userId/cartedProducts/:id', isLoggedIn, async (req, res, next) => {
+//update cartedProducts figure out how to change quantity.
+app.put('/api/user/:userId/product/:id/cartedProducts', isLoggedIn, async (req, res, next) => {
   try {
     //if no object to wrap params, don't include curly brackets.
     res.status(201).send(await updateCartedProducts( req.params.userId, req.params.id));
@@ -171,17 +170,6 @@ app.put('/api/user/:userId/cartedProducts/:id', isLoggedIn, async (req, res, nex
     next(ex);
   }
 });
-
-//addToCart (create cart)
-// app.post('/api/users/:userId/cartedProducts', isLoggedIn, async (req, res, next) => {
-//   try {
-//     res.status(201).send(await createCartedProducts({ user_id: req.params.userId, body: req.body }));
-//   }
-//   catch (ex) {
-//     next(ex);
-//   }
-// });
-
 app.post('/api/users/:userId/cartedProducts', isLoggedIn, async (req, res, next) => {
   try {
     res.status(201).send(await createCartedProducts({ user_id: req.params.userId, product_id: req.body.product_id, qty: req.body.qty }));
@@ -190,8 +178,8 @@ app.post('/api/users/:userId/cartedProducts', isLoggedIn, async (req, res, next)
     next(ex);
   }
 });
-//removeFromCart
-app.delete('/api/users/:userId/cartedProduct/:id', isLoggedIn, async (req, res, next) => {
+//removeFromCart delete product qty.
+app.delete('/api/users/:userId/product/:id/cartedProduct', isLoggedIn, async (req, res, next) => {
   try {
     await deleteCartedProduct({ user_id: req.params.userId, product_id: req.params.id });
     res.sendStatus(204);
@@ -201,7 +189,15 @@ app.delete('/api/users/:userId/cartedProduct/:id', isLoggedIn, async (req, res, 
 });
 
 //delete after checkout
-
+// /api/users/:userId/cartedProducts/:id
+// app.delete('/api/users/:userId/product/:id/cartedProduct', isLoggedIn, async (req, res, next) => {
+//   try {
+//     await deleteCartedProduct({ user_id: req.params.userId, product_id: req.params.id });
+//     res.sendStatus(204);
+//   } catch (ex) {
+//     next(ex);
+//   }
+// });
 
 app.use((err, req, res, next) => {
   console.log(err);
@@ -233,9 +229,9 @@ const init = async () => {
     createCartedProducts({ user_id: curly.id, product_id: foo.id, qty: 4 })
   ]);
 
-  // console.log("carts", await fetchAllCartedProducts());
-  // console.log("users", await fetchUsers());
-  // console.log("products", await fetchProducts());
+  console.log("carts", await fetchAllCartedProducts());
+  console.log("users", await fetchUsers());
+  console.log("products", await fetchProducts());
 
   app.listen(port, () => console.log(`listening on port ${port}`));
 };

@@ -170,12 +170,19 @@ const deleteProduct = async ({ id }) => {
   await client.query(SQL, [id]);
 };
 //deleteCartedProduct
-const deleteCartedProduct = async ({ user_id, id }) => {
+const deleteCartedProduct = async ({ user_id, product_id }) => {
   const SQL = `
-  DELETE FROM carted_products WHERE user_id=$1 AND id=$2
+  DELETE FROM carted_products WHERE user_id=$1 AND product_id=$2
 `;
-  await client.query(SQL, [user_id, id]);
+  await client.query(SQL, [user_id, product_id]);
 };
+
+// const deleteWholeCartedProduct = async ({ user_id, id }) => {
+//   const SQL = `
+//   DELETE FROM carted_products WHERE user_id=$1 AND id=$2
+// `;
+//   await client.query(SQL, [user_id, id]);
+// };
 
 //creating jwt tokens
 const authenticate = async ({ email, password }) => {
