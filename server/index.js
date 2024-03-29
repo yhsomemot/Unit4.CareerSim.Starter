@@ -161,15 +161,15 @@ app.get('/api/cartedProducts', async (req, res, next) => {
   }
 });
 
-//update cartedProducts figure out how to change quantity.
+//update cartedProducts qty
 app.put('/api/user/:userId/product/:id/cartedProducts', isLoggedIn, async (req, res, next) => {
   try {
-    //if no object to wrap params, don't include curly brackets.
-    res.status(201).send(await updateCartedProducts( req.params.userId, req.params.id));
+    res.status(201).send(await updateCartedProducts({ qty: req.body.qty, product_id: req.params.id, user_id: req.params.userId }));
   } catch (ex) {
     next(ex);
   }
 });
+//create cartedProducts
 app.post('/api/users/:userId/cartedProducts', isLoggedIn, async (req, res, next) => {
   try {
     res.status(201).send(await createCartedProducts({ user_id: req.params.userId, product_id: req.body.product_id, qty: req.body.qty }));
@@ -178,7 +178,7 @@ app.post('/api/users/:userId/cartedProducts', isLoggedIn, async (req, res, next)
     next(ex);
   }
 });
-//removeFromCart delete product qty.
+//removeFromCart delete product
 app.delete('/api/users/:userId/product/:id/cartedProduct', isLoggedIn, async (req, res, next) => {
   try {
     await deleteCartedProduct({ user_id: req.params.userId, product_id: req.params.id });

@@ -145,14 +145,14 @@ const updateProduct = async ({ name, price, description, inventory, id }) => {
   return result.rows[0];
 };
 //update carted product
-const updateCartedProducts = async (user_id, product_id, qty) => {
+const updateCartedProducts = async ({ qty, product_id, user_id }) => {
   const SQL = `
     UPDATE carted_products
-    SET user_id=$1, product_id=$2, qty=$3
-    WHERE id=$4
+    SET qty=$1
+    WHERE product_id=$2 AND user_id=$3
     RETURNING *
 `;
-const result = await client.query(SQL,[user_id, product_id, qty]);
+const result = await client.query(SQL,[qty, product_id, user_id]);
 return result.rows[0];
 }
 //deleteUser
@@ -176,6 +176,7 @@ const deleteCartedProduct = async ({ user_id, product_id }) => {
 `;
   await client.query(SQL, [user_id, product_id]);
 };
+
 
 // const deleteWholeCartedProduct = async ({ user_id, id }) => {
 //   const SQL = `
