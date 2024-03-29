@@ -43,7 +43,6 @@ const isAdmin = async (req, res, next) => {
     next(ex);
   }
 };
-
 //auth: ensure that there is a valid token (use the middleware in the /api/auth/me route)
 //login
 app.post('/api/auth/login', async (req, res, next) => {
@@ -54,7 +53,6 @@ app.post('/api/auth/login', async (req, res, next) => {
     next(ex);
   }
 });
-
 //signup
 app.post('/api/auth/register', async (req, res, next) => {
   try {
@@ -64,7 +62,6 @@ app.post('/api/auth/register', async (req, res, next) => {
     next(ex);
   }
 });
-
 app.get('/api/auth/me', isLoggedIn, async (req, res, next) => {
   try {
     res.send(await findUserWithToken(req.headers.authorization));
@@ -73,7 +70,6 @@ app.get('/api/auth/me', isLoggedIn, async (req, res, next) => {
     next(ex);
   }
 });
-
 //fetchUserInfo returns array of users
 app.get('/api/users', isLoggedIn, async (req, res, next) => {
   try {
@@ -141,7 +137,7 @@ app.delete('/api/user/:id', isLoggedIn, async (req, res, next) => {
     next(ex);
   }
 });
-
+// read all cartedProducts
 app.get('/api/users/:userId/cartedProducts', async (req, res, next) => {
   try {
     res.send(await fetchCartedProducts(req.params.userId));
@@ -150,9 +146,8 @@ app.get('/api/users/:userId/cartedProducts', async (req, res, next) => {
     next(ex);
   }
 });
-
 //get all produts
-app.get('/api/cartedProducts', async (req, res, next) => {
+app.get('/api/cartedProducts', isLoggedIn, isAdmin, async (req, res, next) => {
   try {
     res.send(await fetchAllCartedProducts());
   }
@@ -160,7 +155,6 @@ app.get('/api/cartedProducts', async (req, res, next) => {
     next(ex);
   }
 });
-
 //update cartedProducts qty
 app.put('/api/user/:userId/product/:id/cartedProducts', isLoggedIn, async (req, res, next) => {
   try {
