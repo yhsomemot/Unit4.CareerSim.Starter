@@ -50,15 +50,6 @@ const createUser = async ({ email, password, address, payment_info, is_admin }) 
   const result = await client.query(SQL, [uuid.v4(), email, await bcrypt.hash(password, 5), address, payment_info, is_admin]);
   return result.rows[0];
 };
-//createCartedProduct
-// const createCartedProducts = async ({ user_id, body }) => {
-//   const SQL = `
-//     INSERT INTO carted_products(user_id, product_id, qty) VALUES($1, $2, $3) RETURNING *
-//   `;
-//   const result = await client.query(SQL, [ user_id, body.product_id, body.qty ]);
-//   console.log(result)
-//   return result.rows[0];
-// };
 const createCartedProducts = async ({ user_id, product_id, qty }) => {
   const SQL = `
     INSERT INTO carted_products( user_id, product_id, qty) VALUES($1, $2, $3) RETURNING *
@@ -176,14 +167,6 @@ const deleteCartedProduct = async ({ user_id, product_id }) => {
 `;
   await client.query(SQL, [user_id, product_id]);
 };
-
-
-// const deleteWholeCartedProduct = async ({ user_id, id }) => {
-//   const SQL = `
-//   DELETE FROM carted_products WHERE user_id=$1 AND id=$2
-// `;
-//   await client.query(SQL, [user_id, id]);
-// };
 
 //creating jwt tokens
 const authenticate = async ({ email, password }) => {
